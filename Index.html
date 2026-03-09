@@ -1,0 +1,1110 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QualityOS v2 — QC Management System</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Fraunces:ital,wght@0,700;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#080b12; --s1:#0f1219; --s2:#161b26; --s3:#1c2235;
+  --b1:#222840; --b2:#2d3654;
+  --accent:#19e5b0; --purple:#9d7eff; --amber:#ffb547; --rose:#ff5c87; --sky:#4db8ff;
+  --txt:#dde3f0; --dim:#7a85a0; --muted:#404a62;
+  --font:'Sarabun',sans-serif; --mono:'IBM Plex Mono',monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:var(--font);background:var(--bg);color:var(--txt);min-height:100vh;overflow-x:hidden}
+
+/* ── LAYOUT ── */
+.shell{display:flex;min-height:100vh}
+.side{width:230px;background:var(--s1);border-right:1px solid var(--b1);display:flex;flex-direction:column;position:fixed;top:0;bottom:0;left:0;z-index:50}
+.wrap{margin-left:230px;display:flex;flex-direction:column;min-height:100vh}
+
+/* ── SIDEBAR ── */
+.brand{padding:22px 18px 18px;border-bottom:1px solid var(--b1)}
+.brand-tag{font-family:var(--mono);font-size:9px;color:var(--accent);letter-spacing:3px;text-transform:uppercase}
+.brand-name{font-family:'Fraunces',serif;font-size:24px;line-height:1.1;margin-top:2px}
+.brand-sub{font-size:10px;color:var(--dim);margin-top:3px}
+.nav{flex:1;padding:12px 0;overflow-y:auto}
+.nav-grp{padding:8px 18px 4px;font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-top:4px}
+.ni{display:flex;align-items:center;gap:9px;padding:8px 18px;font-size:13px;color:var(--dim);cursor:pointer;transition:.15s;border-left:2px solid transparent;position:relative}
+.ni:hover{background:var(--s2);color:var(--txt)}
+.ni.on{background:rgba(25,229,176,.07);color:var(--accent);border-left-color:var(--accent)}
+.ni .ic{width:18px;text-align:center;font-size:14px}
+.badge{margin-left:auto;font-family:var(--mono);font-size:9px;padding:1px 5px;border-radius:10px;font-weight:600}
+.badge.red{background:var(--rose);color:#fff}
+.badge.amb{background:var(--amber);color:#000}
+.side-foot{padding:14px 18px;border-top:1px solid var(--b1)}
+.ava{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--purple),var(--accent));display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;flex-shrink:0}
+
+/* ── TOPBAR ── */
+.top{height:52px;background:var(--s1);border-bottom:1px solid var(--b1);display:flex;align-items:center;padding:0 24px;gap:12px;position:sticky;top:0;z-index:40}
+.top-title{font-size:14px;font-weight:700;flex:1}
+.search{display:flex;align-items:center;gap:7px;background:var(--s2);border:1px solid var(--b1);border-radius:6px;padding:6px 11px;width:200px;transition:.15s}
+.search:focus-within{border-color:var(--accent)}
+.search input{background:none;border:none;outline:none;font-family:var(--font);font-size:12px;color:var(--txt);width:100%}
+.search input::placeholder{color:var(--muted)}
+
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;gap:5px;padding:7px 13px;border-radius:6px;font-size:12px;font-family:var(--font);font-weight:600;cursor:pointer;transition:.15s;border:none}
+.btn-p{background:var(--accent);color:#000}.btn-p:hover{background:#14c99c}
+.btn-g{background:transparent;color:var(--dim);border:1px solid var(--b1)}.btn-g:hover{background:var(--s2);color:var(--txt)}
+.btn-purple{background:var(--purple);color:#fff}.btn-purple:hover{background:#8b6ef0}
+.btn-sm{padding:5px 10px;font-size:11px}
+.notif{position:relative;cursor:pointer}
+.notif-dot{width:7px;height:7px;background:var(--rose);border-radius:50%;position:absolute;top:6px;right:4px}
+
+/* ── CONTENT ── */
+.content{padding:22px 24px;flex:1}
+
+/* ── STAT CARDS ── */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.sc{background:var(--s1);border:1px solid var(--b1);border-radius:10px;padding:16px 18px;position:relative;overflow:hidden;cursor:default;transition:.2s}
+.sc:hover{border-color:var(--b2)}
+.sc::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.sc.g::before{background:var(--accent)}.sc.a::before{background:var(--amber)}.sc.r::before{background:var(--rose)}.sc.b::before{background:var(--sky)}
+.sc-label{font-size:9px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px}
+.sc-val{font-family:var(--mono);font-size:26px;font-weight:600;line-height:1;margin-bottom:5px}
+.sc-val.g{color:var(--accent)}.sc-val.a{color:var(--amber)}.sc-val.r{color:var(--rose)}.sc-val.b{color:var(--sky)}
+.sc-sub{font-size:10px;color:var(--dim)}
+.sc-ico{position:absolute;right:16px;top:14px;font-size:22px;opacity:.12}
+
+/* ── PANELS ── */
+.pnl{background:var(--s1);border:1px solid var(--b1);border-radius:10px;overflow:hidden;margin-bottom:16px}
+.ph{padding:13px 18px;border-bottom:1px solid var(--b1);display:flex;align-items:center;justify-content:space-between}
+.pt{font-size:12px;font-weight:700;letter-spacing:.3px}
+.pa{font-size:11px;color:var(--accent);cursor:pointer}
+
+/* ── TABS ── */
+.tabs{display:flex;border-bottom:1px solid var(--b1);padding:0 18px;background:var(--s1)}
+.tab{padding:9px 14px;font-size:12px;font-weight:600;cursor:pointer;color:var(--dim);border-bottom:2px solid transparent;transition:.15s;margin-bottom:-1px;white-space:nowrap}
+.tab:hover{color:var(--txt)}.tab.on{color:var(--accent);border-bottom-color:var(--accent)}
+
+/* ── STATUS BADGES ── */
+.sb{font-size:9px;padding:2px 7px;border-radius:20px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;white-space:nowrap}
+.sb.ok{background:rgba(25,229,176,.1);color:var(--accent);border:1px solid rgba(25,229,176,.2)}
+.sb.warn{background:rgba(255,181,71,.1);color:var(--amber);border:1px solid rgba(255,181,71,.2)}
+.sb.bad{background:rgba(255,92,135,.1);color:var(--rose);border:1px solid rgba(255,92,135,.2)}
+.sb.gray{background:rgba(64,74,98,.3);color:var(--dim);border:1px solid var(--b1)}
+.sb.blue{background:rgba(77,184,255,.1);color:var(--sky);border:1px solid rgba(77,184,255,.2)}
+
+/* ── SECTION SHOW/HIDE ── */
+.sec{display:none}.sec.on{display:block}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--b1);border-radius:4px}
+
+/* ── MODAL ── */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;z-index:200;opacity:0;pointer-events:none;transition:.2s;backdrop-filter:blur(6px)}
+.overlay.on{opacity:1;pointer-events:all}
+.modal{background:var(--s1);border:1px solid var(--b1);border-radius:14px;width:600px;max-height:82vh;overflow:hidden;display:flex;flex-direction:column;transform:translateY(16px);transition:.2s}
+.overlay.on .modal{transform:translateY(0)}
+.mh{padding:18px 22px 14px;border-bottom:1px solid var(--b1);display:flex;align-items:center;justify-content:space-between}
+.mt{font-size:14px;font-weight:700}
+.mx{width:26px;height:26px;background:var(--s2);border:1px solid var(--b1);border-radius:5px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--dim);transition:.15s}
+.mx:hover{background:var(--b1);color:var(--txt)}
+.mb{padding:18px 22px;overflow-y:auto;flex:1}
+.mf{padding:14px 22px;border-top:1px solid var(--b1);display:flex;gap:8px;justify-content:flex-end}
+.fi{margin-bottom:14px}
+.fl{display:block;font-size:10px;font-weight:700;color:var(--dim);letter-spacing:.5px;margin-bottom:5px;text-transform:uppercase}
+.finput,.fsel,.ftxt{width:100%;background:var(--s2);border:1px solid var(--b1);border-radius:6px;padding:8px 11px;font-family:var(--font);font-size:13px;color:var(--txt);outline:none;transition:.15s}
+.finput:focus,.fsel:focus,.ftxt:focus{border-color:var(--accent)}
+.ftxt{resize:vertical;min-height:80px}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+/* ──── WORKFLOW DIAGRAM ──── */
+.wf-container{padding:20px}
+.wf-title{font-size:13px;font-weight:700;color:var(--accent);margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.wf-lanes{display:grid;gap:0}
+.wf-lane{display:flex;align-items:stretch;border-bottom:1px solid var(--b1);min-height:80px}
+.wf-lane:last-child{border-bottom:none}
+.wf-role{width:130px;flex-shrink:0;padding:12px 14px;background:var(--s2);border-right:1px solid var(--b1);display:flex;align-items:center}
+.wf-role-name{font-size:11px;font-weight:700;line-height:1.3}
+.wf-role-sub{font-size:9px;color:var(--dim);margin-top:2px}
+.wf-steps{flex:1;padding:10px 16px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.wf-box{background:var(--s2);border:1px solid var(--b1);border-radius:8px;padding:8px 12px;font-size:11px;font-weight:600;cursor:default;transition:.2s;min-width:110px;text-align:center;position:relative}
+.wf-box:hover{border-color:var(--accent);background:rgba(25,229,176,.05)}
+.wf-box.active-step{border-color:var(--amber);background:rgba(255,181,71,.07);color:var(--amber)}
+.wf-box.done-step{border-color:rgba(25,229,176,.3);background:rgba(25,229,176,.05);color:var(--accent)}
+.wf-box.danger-step{border-color:rgba(255,92,135,.3);background:rgba(255,92,135,.05);color:var(--rose)}
+.wf-box-sub{font-size:9px;color:var(--dim);margin-top:3px;font-weight:400}
+.wf-arrow{color:var(--muted);font-size:14px;flex-shrink:0}
+.wf-decision{background:var(--s2);border:2px solid var(--amber);border-radius:4px;transform:rotate(45deg);width:52px;height:52px;flex-shrink:0;display:flex;align-items:center;justify-content:center;cursor:default}
+.wf-decision span{transform:rotate(-45deg);font-size:9px;font-weight:700;color:var(--amber);text-align:center;line-height:1.2}
+.wf-note{font-size:10px;color:var(--dim);font-style:italic;padding:8px 16px 12px;border-top:1px dashed var(--b1)}
+
+/* ──── TRAINING MATRIX ──── */
+.matrix-wrap{overflow-x:auto;padding:16px}
+.matrix{border-collapse:collapse;width:100%;min-width:800px}
+.matrix th,.matrix td{border:1px solid var(--b1);padding:8px 10px;font-size:11px;text-align:center;white-space:nowrap}
+.matrix th{background:var(--s2);font-weight:700;font-size:10px;letter-spacing:.5px}
+.matrix th.name-col{text-align:left;width:150px}
+.matrix td.name-col{text-align:left;font-weight:600}
+.matrix tr:hover td{background:rgba(25,229,176,.03)}
+.tc{width:28px;height:28px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;font-size:12px;cursor:pointer;transition:.15s}
+.tc.req{background:rgba(25,229,176,.15);color:var(--accent)}
+.tc.done{background:rgba(25,229,176,.25);color:var(--accent)}
+.tc.exp{background:rgba(255,92,135,.15);color:var(--rose)}
+.tc.na{background:transparent;color:var(--muted)}
+.tc:hover{transform:scale(1.1)}
+.legend{display:flex;gap:16px;padding:12px 16px;border-top:1px solid var(--b1);flex-wrap:wrap}
+.leg-item{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--dim)}
+
+/* ──── eBR ──── */
+.ebr-header{background:linear-gradient(135deg,rgba(157,126,255,.1),rgba(25,229,176,.05));border-bottom:1px solid var(--b1);padding:16px 20px}
+.ebr-id{font-family:var(--mono);font-size:11px;color:var(--purple);margin-bottom:4px}
+.ebr-name{font-size:18px;font-weight:700;margin-bottom:6px}
+.ebr-meta{display:flex;gap:16px;flex-wrap:wrap}
+.ebr-meta span{font-size:11px;color:var(--dim)}
+.ebr-meta strong{color:var(--txt)}
+.ebr-steps{padding:16px 20px;display:flex;flex-direction:column;gap:10px}
+.ebr-step{background:var(--s2);border:1px solid var(--b1);border-radius:8px;overflow:hidden}
+.ebr-step-head{padding:10px 14px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;transition:.15s}
+.ebr-step-head:hover{background:rgba(25,229,176,.03)}
+.ebr-step-num{font-family:var(--mono);font-size:10px;color:var(--accent);margin-right:8px}
+.ebr-step-title{font-size:12px;font-weight:700;flex:1}
+.ebr-step-body{padding:12px 14px;border-top:1px solid var(--b1)}
+.ebr-field{margin-bottom:10px}
+.ebr-label{font-size:10px;font-weight:700;color:var(--dim);letter-spacing:.5px;margin-bottom:4px;text-transform:uppercase}
+.ebr-input{width:100%;background:var(--bg);border:1px solid var(--b1);border-radius:6px;padding:7px 10px;font-family:var(--mono);font-size:12px;color:var(--txt);outline:none;transition:.15s}
+.ebr-input:focus{border-color:var(--accent)}
+.ebr-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.ebr-sign{display:flex;align-items:center;gap:10px;background:var(--bg);border:1px solid var(--b1);border-radius:6px;padding:8px 12px;margin-top:8px}
+.ebr-sign-box{flex:1;border-bottom:1px dashed var(--b2);height:28px;display:flex;align-items:flex-end;padding-bottom:2px;font-size:11px;color:var(--muted)}
+
+/* ──── EXPORT PREVIEW ──── */
+.sop-preview{background:#fff;color:#222;padding:40px;border-radius:8px;font-family:Arial,sans-serif;font-size:12px;line-height:1.6;max-width:800px;margin:0 auto}
+.sop-preview h1{font-size:16px;font-weight:700;color:#1a1a2e;border-bottom:2px solid #19e5b0;padding-bottom:8px;margin-bottom:16px}
+.sop-preview h2{font-size:13px;font-weight:700;color:#1a1a2e;margin:16px 0 6px;background:#f0faf7;padding:6px 10px;border-left:3px solid #19e5b0}
+.sop-preview table{width:100%;border-collapse:collapse;margin-bottom:14px}
+.sop-preview th,.sop-preview td{border:1px solid #ddd;padding:6px 10px;font-size:11px}
+.sop-preview th{background:#e8f8f3;font-weight:700;text-align:left}
+.sop-preview p{margin-bottom:8px}
+.sop-preview ol,.sop-preview ul{padding-left:20px;margin-bottom:10px}
+.sop-preview li{margin-bottom:4px}
+.sop-print-actions{display:flex;gap:10px;justify-content:flex-end;margin-bottom:16px}
+
+/* ──── PROGRESS BAR ──── */
+.prog{height:5px;background:var(--s3);border-radius:5px;overflow:hidden}
+.prog-fill{height:100%;border-radius:5px;transition:width .5s}
+
+/* ──── GRID UTILS ──── */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+.flex{display:flex;align-items:center;gap:8px}
+.spacer{flex:1}
+
+/* ──── TOAST ──── */
+#toast{position:fixed;bottom:24px;right:24px;background:var(--s1);border:1px solid var(--accent);border-radius:8px;padding:11px 16px;font-size:12px;z-index:999;display:flex;align-items:center;gap:10px;transform:translateY(60px);opacity:0;transition:.3s;pointer-events:none}
+#toast.show{transform:translateY(0);opacity:1}
+</style>
+</head>
+<body>
+<div class="shell">
+
+<!-- ═══════════ SIDEBAR ═══════════ -->
+<nav class="side">
+  <div class="brand">
+    <div class="brand-tag">QualityOS v2</div>
+    <div class="brand-name">QC Manager</div>
+    <div class="brand-sub">Cosmetics GMP · ISO 22716</div>
+  </div>
+  <div class="nav">
+    <div class="nav-grp">Overview</div>
+    <div class="ni on" onclick="go('dash',this)"><span class="ic">⬡</span> Dashboard</div>
+
+    <div class="nav-grp">Document Control</div>
+    <div class="ni" onclick="go('sop',this)"><span class="ic">📋</span> SOP / WI <span class="badge amb">3</span></div>
+    <div class="ni" onclick="go('coa',this)"><span class="ic">🧪</span> COA / Test Record</div>
+    <div class="ni" onclick="go('ebr',this)"><span class="ic">📦</span> eBatch Record <span class="badge amb">NEW</span></div>
+    <div class="ni" onclick="go('dev',this)"><span class="ic">⚠️</span> Deviation & CAPA <span class="badge red">2</span></div>
+
+    <div class="nav-grp">Quality System</div>
+    <div class="ni" onclick="go('wfdiag',this)"><span class="ic">🔄</span> Workflow Diagrams</div>
+    <div class="ni" onclick="go('training',this)"><span class="ic">🎓</span> Training Matrix <span class="badge amb">NEW</span></div>
+    <div class="ni" onclick="go('export',this)"><span class="ic">📤</span> SOP Export <span class="badge amb">NEW</span></div>
+    <div class="ni" onclick="go('audit',this)"><span class="ic">🔍</span> Internal Audit</div>
+  </div>
+  <div class="side-foot">
+    <div class="flex">
+      <div class="ava">SK</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:12px;font-weight:600">สมชาย กิตติ</div>
+        <div style="font-size:10px;color:var(--dim)">QC Manager</div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- ═══════════ MAIN ═══════════ -->
+<div class="wrap">
+<div class="top">
+  <div class="top-title" id="ptitle">⬡ Dashboard — ภาพรวม QC</div>
+  <div class="search"><span style="color:var(--muted);font-size:12px">🔍</span><input placeholder="ค้นหาเอกสาร..."></div>
+  <div class="notif btn btn-g" style="padding:7px 10px">🔔<div class="notif-dot"></div></div>
+  <button class="btn btn-p" onclick="openModal()">+ สร้างเอกสาร</button>
+</div>
+<div class="content">
+
+<!-- ═══════════ DASHBOARD ═══════════ -->
+<div class="sec on" id="s-dash">
+  <div class="stats">
+    <div class="sc g"><div class="sc-ico">📄</div><div class="sc-label">เอกสารทั้งหมด</div><div class="sc-val g">248</div><div class="sc-sub">↑ 12 ใหม่เดือนนี้</div></div>
+    <div class="sc a"><div class="sc-ico">⏳</div><div class="sc-label">รออนุมัติ</div><div class="sc-val a">7</div><div class="sc-sub">SLA เฉลี่ย 2.3 วัน</div></div>
+    <div class="sc r"><div class="sc-ico">⚠️</div><div class="sc-label">Deviation เปิดอยู่</div><div class="sc-val r">2</div><div class="sc-sub">1 รายการด่วน</div></div>
+    <div class="sc b"><div class="sc-ico">✅</div><div class="sc-label">Pass Rate (มี.ค.)</div><div class="sc-val b">96.4%</div><div class="sc-sub">↑ 1.2% จากเดือนก่อน</div></div>
+  </div>
+  <div class="g2">
+    <div class="pnl">
+      <div class="ph"><div class="pt">📁 เอกสารล่าสุด</div><div class="pa" onclick="go('sop',document.querySelectorAll('.ni')[1])">ดูทั้งหมด →</div></div>
+      <div style="padding:6px 0">
+        <div style="display:grid;grid-template-columns:28px 1fr auto auto;gap:10px;align-items:center;padding:9px 16px;border-bottom:1px solid var(--b1);cursor:pointer;transition:.1s" onmouseover="this.style.background='var(--s2)'" onmouseout="this.style.background=''">
+          <div style="width:28px;height:28px;background:rgba(157,126,255,.15);color:var(--purple);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700">SOP</div>
+          <div><div style="font-size:12px;font-weight:600">SOP-QC-012 การสุ่มตัวอย่างวัตถุดิบ</div><div style="font-size:10px;color:var(--dim);font-family:var(--mono)">v3.1 · สมชาย ก.</div></div>
+          <span class="sb warn">รออนุมัติ</span><div style="font-size:10px;color:var(--dim);font-family:var(--mono)">09/03</div>
+        </div>
+        <div style="display:grid;grid-template-columns:28px 1fr auto auto;gap:10px;align-items:center;padding:9px 16px;border-bottom:1px solid var(--b1);cursor:pointer;transition:.1s" onmouseover="this.style.background='var(--s2)'" onmouseout="this.style.background=''">
+          <div style="width:28px;height:28px;background:rgba(25,229,176,.12);color:var(--accent);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700">COA</div>
+          <div><div style="font-size:12px;font-weight:600">COA-RM-2025-0891 TiO₂</div><div style="font-size:10px;color:var(--dim);font-family:var(--mono)">Lot: TDO-891 · TH-Chem</div></div>
+          <span class="sb ok">อนุมัติแล้ว</span><div style="font-size:10px;color:var(--dim);font-family:var(--mono)">08/03</div>
+        </div>
+        <div style="display:grid;grid-template-columns:28px 1fr auto auto;gap:10px;align-items:center;padding:9px 16px;border-bottom:1px solid var(--b1);cursor:pointer;transition:.1s" onmouseover="this.style.background='var(--s2)'" onmouseout="this.style.background=''">
+          <div style="width:28px;height:28px;background:rgba(255,92,135,.12);color:var(--rose);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700">DEV</div>
+          <div><div style="font-size:12px;font-weight:600">DEV-2025-034 pH เกินเกณฑ์ FP#447</div><div style="font-size:10px;color:var(--dim);font-family:var(--mono)">Major · ทีม QC2</div></div>
+          <span class="sb bad">ด่วน</span><div style="font-size:10px;color:var(--dim);font-family:var(--mono)">07/03</div>
+        </div>
+        <div style="display:grid;grid-template-columns:28px 1fr auto auto;gap:10px;align-items:center;padding:9px 16px;cursor:pointer;transition:.1s" onmouseover="this.style.background='var(--s2)'" onmouseout="this.style.background=''">
+          <div style="width:28px;height:28px;background:rgba(77,184,255,.12);color:var(--sky);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700">BR</div>
+          <div><div style="font-size:12px;font-weight:600">BR-2025-0445 Serum Vit.C 30mL</div><div style="font-size:10px;color:var(--dim);font-family:var(--mono)">Batch: VC-250308 · 5,000 หน่วย</div></div>
+          <span class="sb ok">Released</span><div style="font-size:10px;color:var(--dim);font-family:var(--mono)">06/03</div>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div class="pnl">
+        <div class="ph"><div class="pt">📅 เอกสารใกล้หมดอายุ</div></div>
+        <div style="padding:12px 16px;display:flex;flex-direction:column;gap:10px">
+          <div><div class="flex" style="margin-bottom:4px"><span style="font-size:11px;font-weight:600;flex:1">SOP-QC-007 Preservative Test</span><span style="font-family:var(--mono);font-size:10px;color:var(--rose)">14 วัน</span></div><div class="prog"><div class="prog-fill" style="width:90%;background:var(--rose)"></div></div></div>
+          <div><div class="flex" style="margin-bottom:4px"><span style="font-size:11px;font-weight:600;flex:1">SOP-QC-015 Microbial Testing</span><span style="font-family:var(--mono);font-size:10px;color:var(--amber)">30 วัน</span></div><div class="prog"><div class="prog-fill" style="width:65%;background:var(--amber)"></div></div></div>
+          <div><div class="flex" style="margin-bottom:4px"><span style="font-size:11px;font-weight:600;flex:1">WI-QC-022 Packaging Inspection</span><span style="font-family:var(--mono);font-size:10px;color:var(--sky)">60 วัน</span></div><div class="prog"><div class="prog-fill" style="width:35%;background:var(--sky)"></div></div></div>
+        </div>
+      </div>
+      <div class="pnl">
+        <div class="ph"><div class="pt">🏆 KPI ประจำเดือน</div></div>
+        <div style="padding:12px 16px;display:flex;flex-direction:column;gap:10px">
+          <div><div class="flex" style="margin-bottom:4px"><span style="font-size:11px;flex:1">Batch Release On-Time</span><span style="font-family:var(--mono);font-size:11px;color:var(--accent)">98%</span></div><div class="prog"><div class="prog-fill" style="width:98%;background:var(--accent)"></div></div></div>
+          <div><div class="flex" style="margin-bottom:4px"><span style="font-size:11px;flex:1">CAPA Closure Rate</span><span style="font-family:var(--mono);font-size:11px;color:var(--amber)">73%</span></div><div class="prog"><div class="prog-fill" style="width:73%;background:var(--amber)"></div></div></div>
+          <div><div class="flex" style="margin-bottom:4px"><span style="font-size:11px;flex:1">Training Compliance</span><span style="font-family:var(--mono);font-size:11px;color:var(--sky)">91%</span></div><div class="prog"><div class="prog-fill" style="width:91%;background:var(--sky)"></div></div></div>
+          <div><div class="flex" style="margin-bottom:4px"><span style="font-size:11px;flex:1">Document On-Time Review</span><span style="font-family:var(--mono);font-size:11px;color:var(--rose)">87%</span></div><div class="prog"><div class="prog-fill" style="width:87%;background:var(--rose)"></div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ SOP ═══════════ -->
+<div class="sec" id="s-sop">
+  <div class="pnl">
+    <div class="ph" style="padding:14px 18px">
+      <div><div class="pt" style="font-size:14px">📋 SOP / Work Instruction</div><div style="font-size:10px;color:var(--dim);margin-top:2px">Controlled Documents · ISO 22716 / GMP</div></div>
+      <div class="flex"><select class="fsel" style="width:auto;padding:5px 9px;font-size:12px"><option>ทุกสถานะ</option><option>Approved</option><option>Review</option><option>Draft</option></select><button class="btn btn-p btn-sm" onclick="openModal()">+ สร้าง SOP</button></div>
+    </div>
+    <div class="tabs"><div class="tab on">SOP (24)</div><div class="tab">Work Instruction (18)</div><div class="tab">Form (12)</div><div class="tab">Obsolete</div></div>
+    <div style="padding:0">
+      <div style="display:grid;grid-template-columns:28px 1fr 110px 70px 90px 80px 80px;gap:10px;padding:8px 16px;font-size:9px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;border-bottom:1px solid var(--b1)"><span></span><span>ชื่อเอกสาร</span><span>ผู้รับผิดชอบ</span><span>Version</span><span>Review Due</span><span>สถานะ</span><span></span></div>
+      <div style="display:grid;grid-template-columns:28px 1fr 110px 70px 90px 80px 80px;gap:10px;padding:9px 16px;align-items:center;border-bottom:1px solid var(--b1);cursor:pointer;transition:.1s" onmouseover="this.style.background='var(--s2)'" onmouseout="this.style.background=''">
+        <div style="width:24px;height:24px;background:rgba(157,126,255,.15);color:var(--purple);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700">SOP</div>
+        <div><div style="font-size:12px;font-weight:600">SOP-QC-001 การรับ-ส่งวัตถุดิบ</div><div style="font-size:9px;color:var(--dim);font-family:var(--mono)">SOP-QC-001-R04</div></div>
+        <div style="font-size:11px">สมชาย ก.</div><div style="font-size:11px;font-family:var(--mono)">v4.0</div><div style="font-size:11px;color:var(--accent)">มิ.ย. 2025</div>
+        <span class="sb ok">Approved</span><button class="btn btn-g btn-sm" onclick="go('export',document.querySelectorAll('.ni')[7])">Export</button>
+      </div>
+      <div style="display:grid;grid-template-columns:28px 1fr 110px 70px 90px 80px 80px;gap:10px;padding:9px 16px;align-items:center;border-bottom:1px solid var(--b1);cursor:pointer;transition:.1s" onmouseover="this.style.background='var(--s2)'" onmouseout="this.style.background=''">
+        <div style="width:24px;height:24px;background:rgba(157,126,255,.15);color:var(--purple);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700">SOP</div>
+        <div><div style="font-size:12px;font-weight:600">SOP-QC-007 Preservative Challenge Test</div><div style="font-size:9px;color:var(--dim);font-family:var(--mono)">SOP-QC-007-R02</div></div>
+        <div style="font-size:11px">นิดา พ.</div><div style="font-size:11px;font-family:var(--mono)">v2.1</div><div style="font-size:11px;color:var(--rose)">มี.ค. 2025 !</div>
+        <span class="sb warn">Review</span><button class="btn btn-g btn-sm" onclick="go('export',document.querySelectorAll('.ni')[7])">Export</button>
+      </div>
+      <div style="display:grid;grid-template-columns:28px 1fr 110px 70px 90px 80px 80px;gap:10px;padding:9px 16px;align-items:center;border-bottom:1px solid var(--b1);cursor:pointer;transition:.1s" onmouseover="this.style.background='var(--s2)'" onmouseout="this.style.background=''">
+        <div style="width:24px;height:24px;background:rgba(157,126,255,.15);color:var(--purple);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700">SOP</div>
+        <div><div style="font-size:12px;font-weight:600">SOP-QC-012 การสุ่มตัวอย่างวัตถุดิบ (ISO 2859)</div><div style="font-size:9px;color:var(--dim);font-family:var(--mono)">SOP-QC-012-R03</div></div>
+        <div style="font-size:11px">สมชาย ก.</div><div style="font-size:11px;font-family:var(--mono)">v3.1</div><div style="font-size:11px;color:var(--amber)">เม.ย. 2025</div>
+        <span class="sb warn">รออนุมัติ</span><button class="btn btn-g btn-sm" onclick="go('export',document.querySelectorAll('.ni')[7])">Export</button>
+      </div>
+      <div style="display:grid;grid-template-columns:28px 1fr 110px 70px 90px 80px 80px;gap:10px;padding:9px 16px;align-items:center;cursor:pointer;transition:.1s" onmouseover="this.style.background='var(--s2)'" onmouseout="this.style.background=''">
+        <div style="width:24px;height:24px;background:rgba(77,184,255,.12);color:var(--sky);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700">WI</div>
+        <div><div style="font-size:12px;font-weight:600">WI-QC-031 การทดสอบความหนืด (Brookfield)</div><div style="font-size:9px;color:var(--dim);font-family:var(--mono)">WI-QC-031-R00</div></div>
+        <div style="font-size:11px">วิภา ต.</div><div style="font-size:11px;font-family:var(--mono)">v1.0</div><div style="font-size:11px;color:var(--dim)">—</div>
+        <span class="sb gray">Draft</span><button class="btn btn-g btn-sm">Export</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ COA ═══════════ -->
+<div class="sec" id="s-coa">
+  <div class="pnl">
+    <div class="ph" style="padding:14px 18px"><div><div class="pt" style="font-size:14px">🧪 COA / Test Record</div><div style="font-size:10px;color:var(--dim)">Certificate of Analysis · RM / WIP / Finished Product</div></div><button class="btn btn-p btn-sm">+ บันทึกผลทดสอบ</button></div>
+    <div class="tabs"><div class="tab on">Raw Material (RM)</div><div class="tab">WIP / Semi</div><div class="tab">Finished Product</div><div class="tab">Retain Sample</div></div>
+    <div style="padding:16px;display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
+      <div style="background:var(--s2);border:1px solid var(--b1);border-radius:8px;padding:14px">
+        <div style="font-size:9px;color:var(--dim);font-family:var(--mono);margin-bottom:3px">COA-RM-2025-0891</div>
+        <div style="font-size:13px;font-weight:700;margin-bottom:2px">Titanium Dioxide</div>
+        <div style="font-size:10px;color:var(--dim);margin-bottom:10px">Lot: TDO-891 · TH-Chem Co.</div>
+        <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:10px">
+          <div class="flex"><span style="font-size:11px;color:var(--dim);flex:1">Assay (TiO₂)</span><span style="font-family:var(--mono);font-size:11px;color:var(--accent)">99.2% ✓</span></div>
+          <div class="flex"><span style="font-size:11px;color:var(--dim);flex:1">Heavy Metals</span><span style="font-family:var(--mono);font-size:11px;color:var(--accent)">&lt;10ppm ✓</span></div>
+          <div class="flex"><span style="font-size:11px;color:var(--dim);flex:1">Microbial</span><span style="font-family:var(--mono);font-size:11px;color:var(--accent)">&lt;100cfu/g ✓</span></div>
+        </div>
+        <span class="sb ok">QC Passed · Released</span>
+      </div>
+      <div style="background:var(--s2);border:1px solid rgba(255,92,135,.3);border-radius:8px;padding:14px">
+        <div style="font-size:9px;color:var(--dim);font-family:var(--mono);margin-bottom:3px">COA-FP-2025-0447</div>
+        <div style="font-size:13px;font-weight:700;margin-bottom:2px">Serum Vitamin C 30mL</div>
+        <div style="font-size:10px;color:var(--dim);margin-bottom:10px">Batch: VC-250305 · Line 2</div>
+        <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:10px">
+          <div class="flex"><span style="font-size:11px;color:var(--dim);flex:1">pH</span><span style="font-family:var(--mono);font-size:11px;color:var(--rose)">4.8 ✗ Spec:3.5-4.5</span></div>
+          <div class="flex"><span style="font-size:11px;color:var(--dim);flex:1">Assay Vit.C</span><span style="font-family:var(--mono);font-size:11px;color:var(--accent)">9.8% ✓</span></div>
+          <div class="flex"><span style="font-size:11px;color:var(--dim);flex:1">Viscosity</span><span style="font-family:var(--mono);font-size:11px;color:var(--accent)">1,850cP ✓</span></div>
+        </div>
+        <span class="sb bad">Out of Spec → Deviation</span>
+      </div>
+      <div style="background:var(--s2);border:1px solid var(--b1);border-radius:8px;padding:14px">
+        <div style="font-size:9px;color:var(--dim);font-family:var(--mono);margin-bottom:3px">COA-RM-2025-0890</div>
+        <div style="font-size:13px;font-weight:700;margin-bottom:2px">Glycerin USP Grade</div>
+        <div style="font-size:10px;color:var(--dim);margin-bottom:10px">Lot: GLC-890 · Siam-Chem</div>
+        <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:10px">
+          <div class="flex"><span style="font-size:11px;color:var(--dim);flex:1">Purity</span><span style="font-family:var(--mono);font-size:11px;color:var(--accent)">99.7% ✓</span></div>
+          <div class="flex"><span style="font-size:11px;color:var(--dim);flex:1">Water</span><span style="font-family:var(--mono);font-size:11px;color:var(--accent)">0.08% ✓</span></div>
+          <div class="flex"><span style="font-size:11px;color:var(--dim);flex:1">Color (APHA)</span><span style="font-family:var(--mono);font-size:11px;color:var(--amber)">Testing…</span></div>
+        </div>
+        <span class="sb warn">Testing in Progress</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ eBATCH RECORD ═══════════ -->
+<div class="sec" id="s-ebr">
+  <div class="pnl">
+    <div class="ph" style="padding:14px 18px">
+      <div><div class="pt" style="font-size:14px">📦 Electronic Batch Record (eBR)</div><div style="font-size:10px;color:var(--dim)">บันทึก Batch ดิจิทัล · ลดกระดาษ 100% · รองรับ 21 CFR Part 11</div></div>
+      <div class="flex">
+        <span class="sb blue">Batch: VC-250308</span>
+        <button class="btn btn-g btn-sm">ดู Batch อื่น</button>
+        <button class="btn btn-p btn-sm" onclick="saveBR()">💾 บันทึก</button>
+      </div>
+    </div>
+    <div class="ebr-header">
+      <div class="ebr-id">BR-2025-0445 · ออกโดย QC Manager</div>
+      <div class="ebr-name">Serum Vitamin C 30mL — Batch VC-250308</div>
+      <div class="ebr-meta">
+        <span><strong>วันผลิต:</strong> 08/03/2025</span>
+        <span><strong>ขนาด Batch:</strong> 5,000 Units</span>
+        <span><strong>Line:</strong> Filling Line 2</span>
+        <span><strong>สถานะ:</strong> <span style="color:var(--amber)">กำลังดำเนินการ</span></span>
+      </div>
+    </div>
+    <div class="ebr-steps">
+
+      <!-- STEP 1 -->
+      <div class="ebr-step">
+        <div class="ebr-step-head" onclick="toggleEBR(this)">
+          <span class="ebr-step-num">STEP 1</span>
+          <span class="ebr-step-title">การตรวจรับวัตถุดิบ (RM Receiving)</span>
+          <span class="sb ok" style="margin-right:8px">✓ เสร็จสิ้น</span>
+          <span style="color:var(--dim);font-size:12px">▾</span>
+        </div>
+        <div class="ebr-step-body">
+          <div class="ebr-row">
+            <div class="ebr-field"><div class="ebr-label">Vit.C Ascorbic Acid (Lot)</div><input class="ebr-input" value="ASC-2025-0234" readonly></div>
+            <div class="ebr-field"><div class="ebr-label">น้ำหนักที่ชั่ง (kg)</div><input class="ebr-input" value="2.500" readonly></div>
+            <div class="ebr-field"><div class="ebr-label">ผล COA</div><input class="ebr-input" value="Pass — COA-RM-0888" readonly></div>
+          </div>
+          <div class="ebr-field">
+            <div class="ebr-sign">
+              <span style="font-size:11px;color:var(--dim);width:80px">ผู้ตรวจรับ:</span>
+              <div class="ebr-sign-box">วิภา ตรี</div>
+              <span style="font-size:10px;color:var(--dim)">08/03/25 08:42</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 2 -->
+      <div class="ebr-step">
+        <div class="ebr-step-head" onclick="toggleEBR(this)">
+          <span class="ebr-step-num">STEP 2</span>
+          <span class="ebr-step-title">การชั่ง-ตวงวัตถุดิบ (Weighing)</span>
+          <span class="sb ok" style="margin-right:8px">✓ เสร็จสิ้น</span>
+          <span style="color:var(--dim);font-size:12px">▾</span>
+        </div>
+        <div class="ebr-step-body" style="display:none">
+          <div class="ebr-row">
+            <div class="ebr-field"><div class="ebr-label">เครื่องชั่ง (ID)</div><input class="ebr-input" value="BAL-003 (Cal. valid)" readonly></div>
+            <div class="ebr-field"><div class="ebr-label">Vit.C (g)</div><input class="ebr-input" value="250.02 / 250.00" readonly></div>
+            <div class="ebr-field"><div class="ebr-label">Glycerin (g)</div><input class="ebr-input" value="500.10 / 500.00" readonly></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 3 -->
+      <div class="ebr-step">
+        <div class="ebr-step-head" onclick="toggleEBR(this)" style="background:rgba(255,181,71,.04)">
+          <span class="ebr-step-num" style="color:var(--amber)">STEP 3</span>
+          <span class="ebr-step-title">กระบวนการผลิต (Manufacturing)</span>
+          <span class="sb warn" style="margin-right:8px;animation:pulse 2s infinite">⏳ กำลังดำเนินการ</span>
+          <span style="color:var(--dim);font-size:12px">▾</span>
+        </div>
+        <div class="ebr-step-body">
+          <div class="ebr-row">
+            <div class="ebr-field"><div class="ebr-label">อุณหภูมิน้ำ Phase A (°C)</div><input class="ebr-input" placeholder="80 ± 2°C" id="temp-input"></div>
+            <div class="ebr-field"><div class="ebr-label">เวลาผสม (นาที)</div><input class="ebr-input" placeholder="30 นาที" id="mix-input"></div>
+            <div class="ebr-field"><div class="ebr-label">ความเร็ว Mixer (RPM)</div><input class="ebr-input" placeholder="500-600 RPM" id="rpm-input"></div>
+          </div>
+          <div class="ebr-row">
+            <div class="ebr-field"><div class="ebr-label">pH หลังผสม</div><input class="ebr-input" placeholder="Spec: 3.5-4.5" id="ph-input"></div>
+            <div class="ebr-field"><div class="ebr-label">ความหนืด (cP)</div><input class="ebr-input" placeholder="Spec: 1500-2000" id="visc-input"></div>
+            <div class="ebr-field"><div class="ebr-label">สี/ลักษณะ</div><input class="ebr-input" placeholder="ใสสีเหลืองอ่อน"></div>
+          </div>
+          <div class="ebr-field">
+            <div class="ebr-sign">
+              <span style="font-size:11px;color:var(--dim);width:100px">ผู้ควบคุมการผลิต:</span>
+              <div class="ebr-sign-box" id="sign-prod" style="cursor:pointer" onclick="signField(this,'prod')">คลิกเพื่อลงนาม e-Signature</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 4 -->
+      <div class="ebr-step" style="opacity:.6">
+        <div class="ebr-step-head">
+          <span class="ebr-step-num" style="color:var(--muted)">STEP 4</span>
+          <span class="ebr-step-title" style="color:var(--dim)">In-Process QC Check</span>
+          <span class="sb gray" style="margin-right:8px">รอขั้นตอนก่อน</span>
+        </div>
+      </div>
+      <div class="ebr-step" style="opacity:.6">
+        <div class="ebr-step-head">
+          <span class="ebr-step-num" style="color:var(--muted)">STEP 5</span>
+          <span class="ebr-step-title" style="color:var(--dim)">การบรรจุและ Labeling</span>
+          <span class="sb gray" style="margin-right:8px">รอขั้นตอนก่อน</span>
+        </div>
+      </div>
+      <div class="ebr-step" style="opacity:.6">
+        <div class="ebr-step-head">
+          <span class="ebr-step-num" style="color:var(--muted)">STEP 6</span>
+          <span class="ebr-step-title" style="color:var(--dim)">Final QC Release</span>
+          <span class="sb gray" style="margin-right:8px">รอขั้นตอนก่อน</span>
+        </div>
+      </div>
+
+    </div><!-- /ebr-steps -->
+    <div style="padding:12px 20px;border-top:1px solid var(--b1);display:flex;gap:10px;justify-content:flex-end">
+      <button class="btn btn-g">🖨️ พิมพ์ BR</button>
+      <button class="btn btn-purple" onclick="saveBR()">💾 บันทึก Draft</button>
+      <button class="btn btn-p" onclick="releaseBR()">✓ ส่ง QC Review</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ DEVIATION ═══════════ -->
+<div class="sec" id="s-dev">
+  <div class="pnl">
+    <div class="ph" style="padding:14px 18px"><div><div class="pt" style="font-size:14px">⚠️ Deviation & CAPA</div><div style="font-size:10px;color:var(--dim)">Non-Conformance · Root Cause · CAPA Tracking</div></div><button class="btn btn-p btn-sm">+ รายงาน Deviation</button></div>
+    <div style="padding:0">
+      <div style="display:grid;grid-template-columns:28px 1fr 70px 80px 80px 120px;gap:10px;padding:8px 16px;font-size:9px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;border-bottom:1px solid var(--b1)"><span></span><span>รายละเอียด</span><span>ระดับ</span><span>กำหนด</span><span>สถานะ</span><span>CAPA Progress</span></div>
+      <div style="display:grid;grid-template-columns:28px 1fr 70px 80px 80px 120px;gap:10px;padding:10px 16px;align-items:center;border-bottom:1px solid var(--b1)">
+        <div style="width:24px;height:24px;background:rgba(255,92,135,.12);color:var(--rose);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700">DEV</div>
+        <div><div style="font-size:12px;font-weight:600">DEV-2025-034 pH เกินเกณฑ์ FP#447</div><div style="font-size:9px;color:var(--dim)">เปิด: 07/03 · Root Cause: รออยู่</div></div>
+        <span class="sb bad">Major</span><span style="font-size:11px;color:var(--rose);font-family:var(--mono)">14/03</span><span class="sb warn">Open</span>
+        <div><div class="prog" style="margin-bottom:3px"><div class="prog-fill" style="width:40%;background:var(--rose)"></div></div><div style="font-size:9px;color:var(--dim)">40% (D1-D3 เสร็จ)</div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:28px 1fr 70px 80px 80px 120px;gap:10px;padding:10px 16px;align-items:center;border-bottom:1px solid var(--b1)">
+        <div style="width:24px;height:24px;background:rgba(255,92,135,.12);color:var(--rose);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700">DEV</div>
+        <div><div style="font-size:12px;font-weight:600">DEV-2025-028 ฉลากผิด Lot · Batch FC-250210</div><div style="font-size:9px;color:var(--dim)">เปิด: 01/03 · CAPA ดำเนินการอยู่</div></div>
+        <span class="sb warn">Minor</span><span style="font-size:11px;color:var(--amber);font-family:var(--mono)">15/03</span><span class="sb warn">In Prog</span>
+        <div><div class="prog" style="margin-bottom:3px"><div class="prog-fill" style="width:65%;background:var(--amber)"></div></div><div style="font-size:9px;color:var(--dim)">65% (D1-D5 เสร็จ)</div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:28px 1fr 70px 80px 80px 120px;gap:10px;padding:10px 16px;align-items:center">
+        <div style="width:24px;height:24px;background:rgba(255,92,135,.08);color:var(--muted);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700">DEV</div>
+        <div><div style="font-size:12px;font-weight:600;color:var(--dim)">DEV-2025-019 Mixer หยุดกลางคัน Line 3</div><div style="font-size:9px;color:var(--muted)">ปิด: 28/02 · CAPA: ซ่อมบำรุงเชิงป้องกัน</div></div>
+        <span class="sb gray">Minor</span><span style="font-size:11px;color:var(--dim);font-family:var(--mono)">—</span><span class="sb ok">Closed</span>
+        <div><div class="prog" style="margin-bottom:3px"><div class="prog-fill" style="width:100%;background:var(--accent)"></div></div><div style="font-size:9px;color:var(--accent)">100% ปิดแล้ว</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ WORKFLOW DIAGRAMS ═══════════ -->
+<div class="sec" id="s-wfdiag">
+  <div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap">
+    <button class="btn btn-p btn-sm" onclick="showWF('sop-wf')">📋 SOP Approval</button>
+    <button class="btn btn-g btn-sm" onclick="showWF('dev-wf')">⚠️ Deviation / CAPA</button>
+    <button class="btn btn-g btn-sm" onclick="showWF('coa-wf')">🧪 COA / Test Result</button>
+    <button class="btn btn-g btn-sm" onclick="showWF('br-wf')">📦 Batch Release</button>
+  </div>
+
+  <!-- SOP WORKFLOW -->
+  <div id="sop-wf" class="pnl">
+    <div class="ph"><div class="pt">📋 SOP / Work Instruction — Document Approval Workflow</div><span class="sb ok">ISO 22716 / ISO 9001 Compliant</span></div>
+    <div class="wf-container">
+      <div class="wf-title">🔵 Swimlane Diagram — Roles & Steps</div>
+      <div class="wf-lanes">
+        <div class="wf-lane">
+          <div class="wf-role"><div><div class="wf-role-name">QC Officer</div><div class="wf-role-sub">ผู้จัดทำ</div></div></div>
+          <div class="wf-steps">
+            <div class="wf-box done-step">📝 ร่างเอกสาร<div class="wf-box-sub">ใช้ Template มาตรฐาน</div></div>
+            <div class="wf-arrow">→</div>
+            <div class="wf-box done-step">📎 แนบ Reference<div class="wf-box-sub">SOP เก่า / Law / Spec</div></div>
+            <div class="wf-arrow">→</div>
+            <div class="wf-box done-step">📤 ส่งขอ Review<div class="wf-box-sub">ระบบส่งแจ้งเตือน Auto</div></div>
+          </div>
+        </div>
+        <div class="wf-lane">
+          <div class="wf-role"><div><div class="wf-role-name">QC Supervisor</div><div class="wf-role-sub">ผู้ตรวจสอบ</div></div></div>
+          <div class="wf-steps">
+            <div class="wf-box" style="opacity:.4">รอรับงาน</div>
+            <div class="wf-arrow">→</div>
+            <div class="wf-box done-step">🔍 ตรวจสอบเนื้อหา<div class="wf-box-sub">ความถูกต้อง / ครบถ้วน</div></div>
+            <div class="wf-arrow">→</div>
+            <div class="wf-decision"><span>ผ่าน?</span></div>
+            <div class="wf-arrow">→ ใช่</div>
+            <div class="wf-box done-step">✅ e-Sign Review<div class="wf-box-sub">Timestamp Auto</div></div>
+          </div>
+        </div>
+        <div class="wf-lane">
+          <div class="wf-role"><div><div class="wf-role-name">QC Manager</div><div class="wf-role-sub">ผู้อนุมัติ</div></div></div>
+          <div class="wf-steps">
+            <div class="wf-box" style="opacity:.4">รอรับงาน</div>
+            <div class="wf-arrow">→</div>
+            <div class="wf-box active-step">📬 รับเพื่ออนุมัติ<div class="wf-box-sub">← รออยู่ขณะนี้</div></div>
+            <div class="wf-arrow">→</div>
+            <div class="wf-decision"><span>อนุมัติ?</span></div>
+            <div class="wf-arrow">→ ใช่</div>
+            <div class="wf-box">✅ e-Sign Approve<div class="wf-box-sub">เปลี่ยนสถานะ → Approved</div></div>
+          </div>
+        </div>
+        <div class="wf-lane">
+          <div class="wf-role"><div><div class="wf-role-name">System / RA</div><div class="wf-role-sub">เผยแพร่</div></div></div>
+          <div class="wf-steps">
+            <div class="wf-box" style="opacity:.4">รอรับงาน</div>
+            <div class="wf-arrow">→</div>
+            <div class="wf-box" style="opacity:.4">รอรับงาน</div>
+            <div class="wf-arrow">→</div>
+            <div class="wf-box">📢 Publish + แจ้งเตือน<div class="wf-box-sub">ทีมงานทุกคนรับทราบ</div></div>
+            <div class="wf-arrow">→</div>
+            <div class="wf-box">📅 ตั้ง Review Date<div class="wf-box-sub">Alert ล่วงหน้า 60 วัน</div></div>
+            <div class="wf-arrow">→</div>
+            <div class="wf-box">🗑️ Obsolete เก่า<div class="wf-box-sub">เก็บ Archive 5 ปี</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="wf-note">⚡ SLA: Draft→Review ≤ 3 วัน · Review→Approve ≤ 2 วัน · ทุก step มี Audit Trail อัตโนมัติ · ส่งกลับแก้ไขมี Comment บังคับ</div>
+    </div>
+  </div>
+
+  <!-- DEVIATION WORKFLOW -->
+  <div id="dev-wf" class="pnl" style="display:none">
+    <div class="ph"><div class="pt">⚠️ Deviation & CAPA — 8D Problem Solving Workflow</div><span class="sb bad">2 cases open</span></div>
+    <div class="wf-container">
+      <div class="wf-title">🔴 Deviation → Root Cause → CAPA → Closure</div>
+      <div class="wf-lanes">
+        <div class="wf-lane">
+          <div class="wf-role"><div><div class="wf-role-name">ผู้พบเหตุการณ์</div><div class="wf-role-sub">Anyone</div></div></div>
+          <div class="wf-steps">
+            <div class="wf-box danger-step">🚨 พบ Deviation<div class="wf-box-sub">ในกระบวนการ / ผลทดสอบ</div></div>
+            <div class="wf-arrow">→</div>
+            <div class="wf-box danger-step">📝 บันทึก D1-D2<div class="wf-box-sub">5W1H + ระบุทีม</div></div>
+            <div class="wf-arrow">→</div>
+            <div class="wf-box done-step">🚧 D3 Containment<div class="wf-box-sub">Quarantine / Hold Batch</div></div>
+          </div>
+        </div>
+        <div class="wf-lane">
+          <div class="wf-role"><div><div class="wf-role-name">QC Team</div><div class="wf-role-sub">วิเคราะห์สาเหตุ</div></div></div>
+          <div class="wf-steps">
+            <div class="wf-box" style="opacity:.4;min-width:80px"></div>
+            <div class="wf-arrow" style="opacity:0">→</div>
+            <div class="wf-box active-step">🔍 D4 Root Cause<div class="wf-box-sub">Fishbone · 5-Why · FMEA</div></div>
+            <div class="wf-arrow">→</div>
+            <div class="wf-box">📋 D5 Corrective Action<div class="wf-box-sub">แก้ไขทันที</div></div>
+            <div class="wf-arrow">→</div>
+            <div class="wf-box">🛡️ D6 Preventive Action<div class="wf-box-sub">ป้องกันซ้ำ</div></div>
+          </div>
+        </div>
+        <div class="wf-lane">
+          <div class="wf-role"><div><div class="wf-role-name">QC Manager</div><div class="wf-role-sub">ตรวจสอบ & ปิด</div></div></div>
+          <div class="wf-steps">
+            <div class="wf-box" style="opacity:.4;min-width:80px"></div>
+            <div class="wf-arrow" style="opacity:0">→</div>
+            <div class="wf-box" style="opacity:.4;min-width:80px"></div>
+            <div class="wf-arrow" style="opacity:0">→</div>
+            <div class="wf-box">✅ D7 Verify Effectiveness<div class="wf-box-sub">ติดตาม 30/60/90 วัน</div></div>
+            <div class="wf-arrow">→</div>
+            <div class="wf-box">🎯 D8 Close + Lesson<div class="wf-box-sub">แบ่งปันความรู้ทั้งองค์กร</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="wf-note">⏱️ Major Deviation: ต้องเริ่ม Containment ใน 24 ชม. · Root Cause ใน 3 วัน · CAPA plan ใน 7 วัน · Minor: ภายใน 14 วัน</div>
+    </div>
+  </div>
+
+  <!-- COA WORKFLOW -->
+  <div id="coa-wf" class="pnl" style="display:none">
+    <div class="ph"><div class="pt">🧪 COA / Test Result — QC Testing Workflow</div><span class="sb blue">RM / WIP / FP</span></div>
+    <div class="wf-container">
+      <div class="wf-title">🔬 Sample → Test → Result → Release / Reject</div>
+      <div class="wf-lanes">
+        <div class="wf-lane">
+          <div class="wf-role"><div><div class="wf-role-name">QC Sampling</div><div class="wf-role-sub">สุ่มตัวอย่าง</div></div></div>
+          <div class="wf-steps">
+            <div class="wf-box done-step">📬 รับ Sample Request<div class="wf-box-sub">จาก Warehouse/Production</div></div>
+            <div class="wf-arrow">→</div>
+            <div class="wf-box done-step">🧫 สุ่มตัวอย่าง<div class="wf-box-sub">ตาม ISO 2859 AQL</div></div>
+            <div class="wf-arrow">→</div>
+            <div class="wf-box done-step">🏷️ Label + Log<div class="wf-box-sub">Sample ID · LIMS</div></div>
+          </div>
+        </div>
+        <div class="wf-lane">
+          <div class="wf-role"><div><div class="wf-role-name">QC Analyst</div><div class="wf-role-sub">ทดสอบ</div></div></div>
+          <div class="wf-steps">
+            <div class="wf-box done-step">🔬 ดำเนินการทดสอบ<div class="wf-box-sub">ตาม SOP / Method</div></div>
+            <div class="wf-arrow">→</div>
+            <div class="wf-box done-step">📊 บันทึกผลลง eBR<div class="wf-box-sub">Real-time Data Entry</div></div>
+            <div class="wf-arrow">→</div>
+            <div class="wf-decision"><span>In Spec?</span></div>
+          </div>
+        </div>
+        <div class="wf-lane">
+          <div class="wf-role"><div><div class="wf-role-name">QC Manager</div><div class="wf-role-sub">Review & Release</div></div></div>
+          <div class="wf-steps">
+            <div class="wf-box active-step">👁️ Review COA<div class="wf-box-sub">ตรวจสอบทั้งหมด</div></div>
+            <div class="wf-arrow">→</div>
+            <div class="wf-decision"><span>อนุมัติ?</span></div>
+            <div class="wf-arrow">→ ใช่</div>
+            <div class="wf-box done-step">✅ Release Batch<div class="wf-box-sub">ออก COA ให้ลูกค้า</div></div>
+            <div style="display:flex;flex-direction:column;gap:4px;margin-left:8px">
+              <div style="font-size:10px;color:var(--rose)">← ไม่ผ่าน</div>
+              <div class="wf-box danger-step" style="min-width:90px">⚠️ Deviation<div class="wf-box-sub">เปิด CAPA</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="wf-note">📁 COA ทุกฉบับถูกเก็บ Archive อัตโนมัติ · Out of Spec ใดๆ จะสร้าง Deviation อัตโนมัติ · ผลทดสอบมี Audit Trail ทุก entry</div>
+    </div>
+  </div>
+
+  <!-- BATCH RELEASE WORKFLOW -->
+  <div id="br-wf" class="pnl" style="display:none">
+    <div class="ph"><div class="pt">📦 Batch Release — End-to-End Workflow</div><span class="sb ok">GMP Compliant</span></div>
+    <div class="wf-container">
+      <div class="wf-title">🏭 Production → QC → Release → Distribution</div>
+      <div class="wf-lanes">
+        <div class="wf-lane">
+          <div class="wf-role"><div><div class="wf-role-name">Production</div><div class="wf-role-sub">ฝ่ายผลิต</div></div></div>
+          <div class="wf-steps">
+            <div class="wf-box done-step">🏭 เปิด Batch Record<div class="wf-box-sub">eBR · Line Clearance</div></div>
+            <div class="wf-arrow">→</div>
+            <div class="wf-box done-step">⚙️ ผลิตตาม MFR<div class="wf-box-sub">บันทึกทุก step Real-time</div></div>
+            <div class="wf-arrow">→</div>
+            <div class="wf-box done-step">📦 บรรจุ & Labeling<div class="wf-box-sub">Reconciliation ครบ</div></div>
+          </div>
+        </div>
+        <div class="wf-lane">
+          <div class="wf-role"><div><div class="wf-role-name">QC In-Process</div><div class="wf-role-sub">ตรวจระหว่างผลิต</div></div></div>
+          <div class="wf-steps">
+            <div class="wf-box done-step">🔍 IPC Check<div class="wf-box-sub">pH, Viscosity, Weight</div></div>
+            <div class="wf-arrow">→</div>
+            <div class="wf-box active-step">🧪 Final Testing<div class="wf-box-sub">Micro, Stability, Spec</div></div>
+            <div class="wf-arrow">→</div>
+            <div class="wf-box">📋 ออก COA<div class="wf-box-sub">รอ Manager Release</div></div>
+          </div>
+        </div>
+        <div class="wf-lane">
+          <div class="wf-role"><div><div class="wf-role-name">QC Manager</div><div class="wf-role-sub">Batch Release</div></div></div>
+          <div class="wf-steps">
+            <div class="wf-box">📂 Review BR ทั้งหมด<div class="wf-box-sub">eBR + COA + Deviations</div></div>
+            <div class="wf-arrow">→</div>
+            <div class="wf-box">✅ e-Sign Release<div class="wf-box-sub">Certificate of Release</div></div>
+            <div class="wf-arrow">→</div>
+            <div class="wf-box">🚛 แจ้ง Warehouse<div class="wf-box-sub">Status: RELEASED</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="wf-note">🎯 Target: Batch Release ≤ 3 วันทำการ หลังผลิตเสร็จ · Retain Sample เก็บ 1 ปีหลัง Expiry Date · ทุก Batch ต้องมี Deviation Summary</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ TRAINING MATRIX ═══════════ -->
+<div class="sec" id="s-training">
+  <div class="pnl">
+    <div class="ph" style="padding:14px 18px">
+      <div><div class="pt" style="font-size:14px">🎓 Training Record & Competency Matrix</div><div style="font-size:10px;color:var(--dim)">Training Matrix · e-Learning · Qualification · ต่ออายุอัตโนมัติ</div></div>
+      <div class="flex"><button class="btn btn-g btn-sm">+ เพิ่มพนักงาน</button><button class="btn btn-p btn-sm" onclick="exportMatrix()">📊 Export Excel</button></div>
+    </div>
+    <div class="tabs">
+      <div class="tab on" onclick="switchTrainTab(this,'tab-matrix')">Training Matrix</div>
+      <div class="tab" onclick="switchTrainTab(this,'tab-calendar')">Training Calendar</div>
+      <div class="tab" onclick="switchTrainTab(this,'tab-cert')">Certificates</div>
+    </div>
+
+    <!-- MATRIX TAB -->
+    <div id="tab-matrix">
+      <div class="matrix-wrap">
+        <table class="matrix">
+          <thead>
+            <tr>
+              <th class="name-col">ชื่อพนักงาน / ตำแหน่ง</th>
+              <th>GMP<br>Basic</th>
+              <th>SOP<br>QC-001</th>
+              <th>SOP<br>QC-007</th>
+              <th>SOP<br>QC-012</th>
+              <th>Micro<br>Lab</th>
+              <th>CAPA<br>8D</th>
+              <th>Deviation<br>Report</th>
+              <th>Safety<br>Lab</th>
+              <th>Calibration<br>Aware.</th>
+              <th>ISO<br>22716</th>
+              <th style="font-family:var(--mono);font-size:10px">% Done</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="name-col"><div style="font-weight:700">สมชาย กิตติ</div><div style="font-size:9px;color:var(--dim)">QC Manager</div></td>
+              <td><div class="tc done" onclick="toggleTC(this)" title="ผ่านแล้ว · 15/01/25">✓</div></td>
+              <td><div class="tc done" onclick="toggleTC(this)">✓</div></td>
+              <td><div class="tc done" onclick="toggleTC(this)">✓</div></td>
+              <td><div class="tc done" onclick="toggleTC(this)">✓</div></td>
+              <td><div class="tc done" onclick="toggleTC(this)">✓</div></td>
+              <td><div class="tc done" onclick="toggleTC(this)">✓</div></td>
+              <td><div class="tc done" onclick="toggleTC(this)">✓</div></td>
+              <td><div class="tc done" onclick="toggleTC(this)">✓</div></td>
+              <td><div class="tc done" onclick="toggleTC(this)">✓</div></td>
+              <td><div class="tc done" onclick="toggleTC(this)">✓</div></td>
+              <td style="font-family:var(--mono);font-size:11px;color:var(--accent);font-weight:700">100%</td>
+            </tr>
+            <tr>
+              <td class="name-col"><div style="font-weight:700">นิดา พงศ์</div><div style="font-size:9px;color:var(--dim)">QC Supervisor</div></td>
+              <td><div class="tc done" onclick="toggleTC(this)">✓</div></td>
+              <td><div class="tc done" onclick="toggleTC(this)">✓</div></td>
+              <td><div class="tc exp" onclick="toggleTC(this)" title="หมดอายุ · ต้องต่ออายุ">!</div></td>
+              <td><div class="tc done" onclick="toggleTC(this)">✓</div></td>
+              <td><div class="tc done" onclick="toggleTC(this)">✓</div></td>
+              <td><div class="tc done" onclick="toggleTC(this)">✓</div></td>
+              <td><div class="tc done" onclick="toggleTC(this)">✓</div></td>
+              <td><div class="tc done" onclick="toggleTC(this)">✓</div></td>
+              <td><div class="tc req" onclick="toggleTC(this)">○</div></td>
+              <td><div class="tc done" onclick="toggleTC(this)">✓</div></td>
+              <td style="font-family:var(--mono);font-size:11px;color:var(--amber);font-weight:700">88%</td>
+            </tr>
+            <tr>
+              <td class="name-col"><div style="font-weight:700">วิภา ตรี</div><div style="font-size:9px;color:var(--dim)">QC Officer</div></td>
+              <td><div class="tc done" onclick="toggleTC(this)">✓</div></td>
+              <td><div class="tc done" onclick="toggleTC(this)">✓</div></td>
+              <td><div class="tc done" onclick="toggleTC(this)">✓</div></td>
+              <td><div class="tc req" onclick="toggleTC(this)">○</div></td>
+              <td><div class="tc done" onclick="toggleTC(this)">✓</div></td>
+              <td><div class="tc req" onclick="toggleTC(this)">○</div></td>
+              <td><div class="tc done" onclick="toggleTC(this)">✓</div></td>
+              <td><div class="tc done" onclick="toggleTC(this)">✓</div></td>
+              <td><div class="tc done" onclick="toggleTC(this)">✓</div></td>
+              <td><div class="tc na" onclick="toggleTC(this)">—</div></td>
+              <td style="font-family:var(--mono);font-size:11px;color:var(--amber);font-weight:700">78%</td>
+            </tr>
+            <tr>
+              <td class="name-col"><div style="font-weight:700">อรุณ สมบัติ</div><div style="font-size:9px;color:var(--dim)">QC Analyst</div></td>
+              <td><div class="tc done" onclick="toggleTC(this)">✓</div></td>
+              <td><div class="tc done" onclick="toggleTC(this)">✓</div></td>
+              <td><div class="tc done" onclick="toggleTC(this)">✓</div></td>
+              <td><div class="tc done" onclick="toggleTC(this)">✓</div></td>
+              <td><div class="tc exp" onclick="toggleTC(this)">!</div></td>
+              <td><div class="tc req" onclick="toggleTC(this)">○</div></td>
+              <td><div class="tc req" onclick="toggleTC(this)">○</div></td>
+              <td><div class="tc done" onclick="toggleTC(this)">✓</div></td>
+              <td><div class="tc done" onclick="toggleTC(this)">✓</div></td>
+              <td><div class="tc na" onclick="toggleTC(this)">—</div></td>
+              <td style="font-family:var(--mono);font-size:11px;color:var(--rose);font-weight:700">63%</td>
+            </tr>
+            <tr>
+              <td class="name-col"><div style="font-weight:700">ปิยะ ก้องเกียรติ</div><div style="font-size:9px;color:var(--dim)">QC Analyst (ใหม่)</div></td>
+              <td><div class="tc req" onclick="toggleTC(this)">○</div></td>
+              <td><div class="tc req" onclick="toggleTC(this)">○</div></td>
+              <td><div class="tc req" onclick="toggleTC(this)">○</div></td>
+              <td><div class="tc req" onclick="toggleTC(this)">○</div></td>
+              <td><div class="tc req" onclick="toggleTC(this)">○</div></td>
+              <td><div class="tc req" onclick="toggleTC(this)">○</div></td>
+              <td><div class="tc req" onclick="toggleTC(this)">○</div></td>
+              <td><div class="tc req" onclick="toggleTC(this)">○</div></td>
+              <td><div class="tc req" onclick="toggleTC(this)">○</div></td>
+              <td><div class="tc na" onclick="toggleTC(this)">—</div></td>
+              <td style="font-family:var(--mono);font-size:11px;color:var(--rose);font-weight:700">0%</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="legend">
+        <div class="leg-item"><div class="tc done" style="width:20px;height:20px;font-size:10px">✓</div>ผ่านแล้ว (Valid)</div>
+        <div class="leg-item"><div class="tc exp" style="width:20px;height:20px;font-size:10px">!</div>หมดอายุ (Expired)</div>
+        <div class="leg-item"><div class="tc req" style="width:20px;height:20px;font-size:10px">○</div>ยังไม่ได้อบรม (Required)</div>
+        <div class="leg-item"><div class="tc na" style="width:20px;height:20px;font-size:10px">—</div>ไม่บังคับ (N/A)</div>
+        <div class="leg-item" style="margin-left:auto;font-size:10px;color:var(--accent)">💡 คลิกช่องเพื่อบันทึกสถานะ</div>
+      </div>
+    </div>
+
+    <!-- CALENDAR TAB -->
+    <div id="tab-calendar" style="display:none;padding:16px">
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
+        <div style="background:var(--s2);border:1px solid var(--b1);border-radius:8px;padding:14px">
+          <div style="font-size:9px;color:var(--muted);font-family:var(--mono);margin-bottom:4px">10 มี.ค. 2025 · 09:00-12:00</div>
+          <div style="font-size:13px;font-weight:700;margin-bottom:4px">GMP Basic Refresher</div>
+          <div style="font-size:11px;color:var(--dim);margin-bottom:8px">ห้องฝึกอบรม B · วิทยากร: QA Director</div>
+          <div style="font-size:11px;margin-bottom:8px">ผู้เข้าร่วม: <strong>ปิยะ ก.</strong> และทีมใหม่ 3 คน</div>
+          <span class="sb warn">กำลังจะถึง</span>
+        </div>
+        <div style="background:var(--s2);border:1px solid var(--b1);border-radius:8px;padding:14px">
+          <div style="font-size:9px;color:var(--muted);font-family:var(--mono);margin-bottom:4px">15 มี.ค. 2025 · 13:00-16:00</div>
+          <div style="font-size:13px;font-weight:700;margin-bottom:4px">CAPA & 8D Problem Solving</div>
+          <div style="font-size:11px;color:var(--dim);margin-bottom:8px">ห้องฝึกอบรม A</div>
+          <div style="font-size:11px;margin-bottom:8px">ผู้เข้าร่วม: <strong>วิภา, อรุณ</strong> (required)</div>
+          <span class="sb warn">กำลังจะถึง</span>
+        </div>
+        <div style="background:var(--s2);border:1px solid rgba(255,92,135,.2);border-radius:8px;padding:14px">
+          <div style="font-size:9px;color:var(--rose);font-family:var(--mono);margin-bottom:4px">20 มี.ค. 2025 · 14:00-16:00</div>
+          <div style="font-size:13px;font-weight:700;margin-bottom:4px">SOP-QC-007 Re-Training</div>
+          <div style="font-size:11px;color:var(--dim);margin-bottom:8px">ห้อง Micro Lab</div>
+          <div style="font-size:11px;margin-bottom:8px">ผู้เข้าร่วม: <strong>นิดา พ.</strong> (expired!)</div>
+          <span class="sb bad">ด่วน — Certificate หมดอายุ</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- CERTIFICATES TAB -->
+    <div id="tab-cert" style="display:none;padding:16px">
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="display:grid;grid-template-columns:1fr 120px 120px 80px;gap:12px;padding:8px 12px;font-size:9px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;border-bottom:1px solid var(--b1)"><span>หลักสูตร · พนักงาน</span><span>วันที่ผ่าน</span><span>หมดอายุ</span><span>สถานะ</span></div>
+        <div style="display:grid;grid-template-columns:1fr 120px 120px 80px;gap:12px;padding:9px 12px;border-bottom:1px solid var(--b1);align-items:center"><div><div style="font-size:12px;font-weight:600">GMP Basic · สมชาย กิตติ</div><div style="font-size:10px;color:var(--dim)">Cert: GMP-2025-001</div></div><div style="font-size:11px;font-family:var(--mono)">15/01/2025</div><div style="font-size:11px;font-family:var(--mono);color:var(--accent)">15/01/2027</div><span class="sb ok">Valid</span></div>
+        <div style="display:grid;grid-template-columns:1fr 120px 120px 80px;gap:12px;padding:9px 12px;border-bottom:1px solid var(--b1);align-items:center"><div><div style="font-size:12px;font-weight:600">SOP-QC-007 · นิดา พงศ์</div><div style="font-size:10px;color:var(--dim)">Cert: SOP007-2023-011</div></div><div style="font-size:11px;font-family:var(--mono)">10/01/2023</div><div style="font-size:11px;font-family:var(--mono);color:var(--rose)">10/01/2025 !</div><span class="sb bad">Expired</span></div>
+        <div style="display:grid;grid-template-columns:1fr 120px 120px 80px;gap:12px;padding:9px 12px;align-items:center"><div><div style="font-size:12px;font-weight:600">Micro Lab Safety · อรุณ สมบัติ</div><div style="font-size:10px;color:var(--dim)">Cert: MIC-2023-008</div></div><div style="font-size:11px;font-family:var(--mono)">20/06/2023</div><div style="font-size:11px;font-family:var(--mono);color:var(--rose)">20/06/2025 !</div><span class="sb bad">Expired</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ SOP EXPORT ═══════════ -->
+<div class="sec" id="s-export">
+  <div class="pnl" style="margin-bottom:16px">
+    <div class="ph" style="padding:14px 18px"><div class="pt" style="font-size:14px">📤 SOP Export — Print & Download</div></div>
+    <div style="padding:14px 18px;display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+      <select class="fsel" style="width:280px" id="export-sel" onchange="switchExport(this.value)">
+        <option value="sop-001">SOP-QC-001 การรับ-ส่งวัตถุดิบ (v4.0)</option>
+        <option value="sop-007">SOP-QC-007 Preservative Challenge Test (v2.1)</option>
+        <option value="sop-012">SOP-QC-012 การสุ่มตัวอย่างวัตถุดิบ (v3.1)</option>
+      </select>
+      <div class="sop-print-actions" style="margin:0">
+        <button class="btn btn-g btn-sm" onclick="printSOP()">🖨️ Print</button>
+        <button class="btn btn-p btn-sm" onclick="downloadSOP()">⬇️ Download PDF</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SOP PREVIEW -->
+  <div id="sop-doc-001" class="sop-preview">
+    <table style="width:100%;border-collapse:collapse;margin-bottom:20px">
+      <tr>
+        <td style="width:120px;border:1px solid #ccc;padding:8px;text-align:center;font-weight:700;font-size:18px;color:#19e5b0">Beauty<br><span style="font-size:10px;color:#666">Science Co.</span></td>
+        <td style="border:1px solid #ccc;padding:8px;text-align:center">
+          <div style="font-size:16px;font-weight:700">มาตรฐานการปฏิบัติงาน</div>
+          <div style="font-size:13px">Standard Operating Procedure</div>
+        </td>
+        <td style="width:180px;border:1px solid #ccc;padding:8px;font-size:11px">
+          <div><b>รหัสเอกสาร:</b> SOP-QC-001</div>
+          <div><b>Version:</b> 4.0</div>
+          <div><b>วันที่บังคับใช้:</b> 01/01/2025</div>
+          <div><b>Review Date:</b> 01/01/2027</div>
+          <div><b>หน้า:</b> 1 of 4</div>
+        </td>
+      </tr>
+    </table>
+    <h1>การรับและส่งมอบวัตถุดิบ (Raw Material Receiving and Transfer)</h1>
+    <table style="width:100%;margin-bottom:16px">
+      <tr><th style="width:25%">จัดทำโดย</th><th style="width:25%">ตรวจสอบโดย</th><th style="width:25%">อนุมัติโดย</th><th style="width:25%">วันที่มีผล</th></tr>
+      <tr><td>สมชาย กิตติ<br><span style="font-size:10px">QC Manager</span></td><td>นิดา พงศ์<br><span style="font-size:10px">QC Supervisor</span></td><td>ผู้จัดการโรงงาน<br><span style="font-size:10px">Factory Manager</span></td><td>01/01/2025</td></tr>
+    </table>
+    <h2>1. วัตถุประสงค์ (Purpose)</h2>
+    <p>เพื่อกำหนดขั้นตอนและวิธีปฏิบัติในการรับและส่งมอบวัตถุดิบที่ใช้ในการผลิตเครื่องสำอาง ให้เป็นไปตามมาตรฐาน ISO 22716 และข้อกำหนด GMP ของโรงงาน</p>
+    <h2>2. ขอบเขต (Scope)</h2>
+    <p>ครอบคลุมกิจกรรมทั้งหมดตั้งแต่การรับวัตถุดิบจากผู้จัดจำหน่าย การตรวจสอบเบื้องต้น การสุ่มตัวอย่าง ไปจนถึงการส่งเข้าคลังวัตถุดิบ</p>
+    <h2>3. ความรับผิดชอบ (Responsibilities)</h2>
+    <table>
+      <tr><th>บทบาท</th><th>หน้าที่รับผิดชอบ</th></tr>
+      <tr><td>QC Officer</td><td>ดำเนินการรับวัตถุดิบ ตรวจสอบเอกสาร และสุ่มตัวอย่าง</td></tr>
+      <tr><td>QC Supervisor</td><td>ตรวจสอบผลการรับวัตถุดิบ และออก Disposition</td></tr>
+      <tr><td>Warehouse</td><td>รับมอบวัตถุดิบที่ผ่านการอนุมัติ และจัดเก็บตามที่กำหนด</td></tr>
+    </table>
+    <h2>4. ขั้นตอนการปฏิบัติ (Procedure)</h2>
+    <ol>
+      <li><strong>การตรวจสอบเอกสาร:</strong> ตรวจสอบ Purchase Order, Delivery Note, และ COA จากผู้จัดจำหน่าย</li>
+      <li><strong>การตรวจสอบบรรจุภัณฑ์:</strong> ตรวจสอบสภาพภายนอก ความสมบูรณ์ของภาชนะ และฉลาก</li>
+      <li><strong>การสุ่มตัวอย่าง:</strong> สุ่มตัวอย่างตาม SOP-QC-012 (ISO 2859 AQL 1.0)</li>
+      <li><strong>การ Quarantine:</strong> วางวัตถุดิบในพื้นที่ Quarantine พร้อมติดป้าย "รอตรวจสอบ"</li>
+      <li><strong>การออก Disposition:</strong> QC Supervisor ออก Released / Rejected / Retested ภายใน 3 วันทำการ</li>
+    </ol>
+    <h2>5. เกณฑ์การยอมรับ (Acceptance Criteria)</h2>
+    <p>เป็นไปตาม Specification ที่ระบุใน Raw Material Specification Sheet (RMSS) สำหรับวัตถุดิบแต่ละชนิด</p>
+    <h2>6. เอกสารอ้างอิง (References)</h2>
+    <ul>
+      <li>ISO 22716:2007 — Cosmetics GMP Guidelines</li>
+      <li>SOP-QC-012 — การสุ่มตัวอย่างวัตถุดิบ</li>
+      <li>Form-QC-001-F01 — ใบบันทึกการรับวัตถุดิบ</li>
+    </ul>
+    <p style="margin-top:20px;font-size:10px;color:#999;border-top:1px solid #eee;padding-top:8px">เอกสารควบคุม — ห้ามทำสำเนาโดยไม่ได้รับอนุญาต · SOP-QC-001 v4.0 · Beauty Science Co., Ltd. · หน้า 1 of 4</p>
+  </div>
+</div>
+
+<!-- ═══════════ AUDIT ═══════════ -->
+<div class="sec" id="s-audit">
+  <div class="pnl">
+    <div class="ph" style="padding:14px 18px"><div class="pt" style="font-size:14px">🔍 Internal Audit Management</div></div>
+    <div style="padding:40px;text-align:center;color:var(--dim)">
+      <div style="font-size:36px;margin-bottom:12px">🔍</div>
+      <div style="font-size:14px;font-weight:700;margin-bottom:6px">Audit Plan · Checklist · Findings · CAPA Tracking</div>
+      <div style="font-size:12px">พร้อมใช้งาน — ติดต่อทีม IT เพื่อ deploy ในระบบจริง</div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /content -->
+</div><!-- /wrap -->
+</div><!-- /shell -->
+
+<!-- MODAL -->
+<div class="overlay" id="modal" onclick="closeM(event)">
+  <div class="modal">
+    <div class="mh"><div class="mt" id="m-title">📋 สร้างเอกสารใหม่</div><div class="mx" onclick="closeM()">✕</div></div>
+    <div class="mb">
+      <div class="fi"><label class="fl">ประเภทเอกสาร</label><select class="fsel" onchange="updateCode(this.value)"><option value="sop">SOP</option><option value="wi">Work Instruction</option><option value="coa">COA / Test Record</option><option value="dev">Deviation Report</option><option value="batch">Batch Record</option></select></div>
+      <div class="frow"><div class="fi"><label class="fl">รหัสเอกสาร</label><input class="finput" id="doc-code" value="SOP-QC-032"></div><div class="fi"><label class="fl">Version</label><input class="finput" value="v1.0"></div></div>
+      <div class="fi"><label class="fl">ชื่อเอกสาร</label><input class="finput" placeholder="เช่น การทดสอบความคงตัวผลิตภัณฑ์"></div>
+      <div class="frow"><div class="fi"><label class="fl">ผู้รับผิดชอบ</label><select class="fsel"><option>สมชาย กิตติ</option><option>นิดา พงศ์</option><option>วิภา ตรี</option></select></div><div class="fi"><label class="fl">Review Date</label><input class="finput" type="date"></div></div>
+      <div class="fi"><label class="fl">Scope / วัตถุประสงค์</label><textarea class="ftxt" placeholder="ระบุขอบเขตและวัตถุประสงค์..."></textarea></div>
+    </div>
+    <div class="mf"><button class="btn btn-g" onclick="closeM()">ยกเลิก</button><button class="btn btn-g">💾 Draft</button><button class="btn btn-p" onclick="submitDoc()">📤 ส่งขออนุมัติ</button></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"><span style="color:var(--accent);font-size:16px">✓</span> <span id="toast-msg"></span></div>
+
+<script>
+const codes = {sop:'SOP-QC-032',wi:'WI-QC-034',coa:'COA-RM-2025-0892',dev:'DEV-2025-035',batch:'BR-2025-0450'};
+const titles = {dash:'⬡ Dashboard — ภาพรวม QC',sop:'📋 SOP / Work Instruction',coa:'🧪 COA / Test Record',ebr:'📦 Electronic Batch Record',dev:'⚠️ Deviation & CAPA',wfdiag:'🔄 Workflow Diagrams',training:'🎓 Training Record & Matrix',export:'📤 SOP Export',audit:'🔍 Internal Audit'};
+
+function go(id, el) {
+  document.querySelectorAll('.sec').forEach(s=>s.classList.remove('on'));
+  document.getElementById('s-'+id).classList.add('on');
+  document.querySelectorAll('.ni').forEach(n=>n.classList.remove('on'));
+  if(el) el.classList.add('on');
+  document.getElementById('ptitle').textContent = titles[id]||'';
+}
+
+function openModal() { document.getElementById('modal').classList.add('on'); }
+function closeM(e) { if(!e||e.target===document.getElementById('modal')) document.getElementById('modal').classList.remove('on'); }
+function updateCode(v) { document.getElementById('doc-code').value = codes[v]||''; }
+
+function submitDoc() {
+  closeM();
+  showToast('ส่งเอกสารเข้า Workflow เรียบร้อยแล้ว');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  document.getElementById('toast-msg').textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 3200);
+}
+
+// Tabs generic
+document.querySelectorAll('.tabs').forEach(ts=>{
+  ts.querySelectorAll('.tab').forEach(tab=>{
+    tab.addEventListener('click',function(){
+      ts.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+      this.classList.add('on');
+    });
+  });
+});
+
+// Workflow diagram tabs
+function showWF(id) {
+  ['sop-wf','dev-wf','coa-wf','br-wf'].forEach(w=>{
+    const el = document.getElementById(w);
+    if(el) el.style.display = w===id?'':'none';
+  });
+}
+
+// Training tabs
+function switchTrainTab(tab, tabId) {
+  document.querySelectorAll('#s-training .tabs .tab').forEach(t=>t.classList.remove('on'));
+  tab.classList.add('on');
+  ['tab-matrix','tab-calendar','tab-cert'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.style.display = id===tabId?'':'none';
+  });
+}
+
+// Training matrix toggle
+function toggleTC(el) {
+  const states = ['req','done','exp','na'];
+  const labels = ['○','✓','!','—'];
+  let idx = states.findIndex(c=>el.classList.contains(c));
+  states.forEach(c=>el.classList.remove(c));
+  idx = (idx+1)%4;
+  el.classList.add(states[idx]);
+  el.textContent = labels[idx];
+  showToast('บันทึกสถานะการอบรมแล้ว');
+}
+
+// eBR
+function toggleEBR(head) {
+  const body = head.nextElementSibling;
+  if(body && body.classList.contains('ebr-step-body')) {
+    body.style.display = body.style.display==='none'?'':'none';
+  }
+}
+
+function signField(el, who) {
+  el.textContent = 'สมชาย กิตติ · '+new Date().toLocaleString('th-TH',{dateStyle:'short',timeStyle:'short'});
+  el.style.color = 'var(--accent)';
+  el.style.cursor = 'default';
+  el.onclick = null;
+  showToast('e-Signature บันทึกแล้ว · Audit Trail: '+new Date().toISOString());
+}
+
+function saveBR() { showToast('บันทึก Batch Record เรียบร้อยแล้ว'); }
+function releaseBR() { showToast('ส่ง Batch Record ให้ QC Review แล้ว — รอการอนุมัติ'); }
+
+// SOP Export
+function switchExport(val) {
+  ['sop-doc-001'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.style.display = '';
+  });
+}
+
+function printSOP() {
+  window.print();
+  showToast('กำลังส่งไปยังเครื่องพิมพ์...');
+}
+
+function downloadSOP() {
+  showToast('กำลังสร้างไฟล์ PDF — SOP-QC-001-v4.0.pdf');
+}
+
+function exportMatrix() {
+  showToast('กำลัง Export Training Matrix เป็น Excel...');
+}
+</script>
+</body>
+</html>
